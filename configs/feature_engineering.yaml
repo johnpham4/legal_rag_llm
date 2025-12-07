@@ -1,0 +1,10 @@
+settings:
+  docker:
+    parent_image: pytorch/pytorch:2.2.0-cuda11.8-cudnn8-runtime
+    skip_build: True
+  orchestrator.sagemaker:
+    synchronous: false
+
+parameters:
+  query_limit: null
+  batch_size: 10
