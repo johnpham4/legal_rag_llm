@@ -6,7 +6,6 @@ import numpy as np
 from loguru import logger
 from numpy.typing import NDArray
 from sentence_transformers.SentenceTransformer import SentenceTransformer
-from sentence_transformers.cross_encoder import CrossEncoder
 from transformers import AutoTokenizer
 
 from llm_engineering.settings import settings

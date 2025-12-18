@@ -23,7 +23,9 @@ class Query(VectorBaseDocument):
 
 class EmbeddedQuery(Query):
     embedding: list[float]
+    sparse_embedding: dict | None = None
 
     class Config:
         name = "embedded_queries"
         use_vector_index = True
+        use_sparse_vector_index = True

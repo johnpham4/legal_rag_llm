@@ -8,8 +8,8 @@ from llm_engineering.application.networks.embedding import EmbeddingModelSinglet
 from loguru import logger
 
 from qdrant_client.http import exceptions
-from qdrant_client.http.models import Distance, VectorParams
-from qdrant_client.models import CollectionInfo, PointStruct, Record
+from qdrant_client.http.models import Distance, VectorParams, SparseVectorParams, Modifier
+from qdrant_client.models import CollectionInfo, PointStruct, Record, SparseVector
 
 from llm_engineering.infrastructure.db.qdrant import connection
 from llm_engineering.domain.exceptions import ImproperlyConfigured
@@ -50,7 +50,18 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
         if vector and isinstance(vector, np.ndarray):
             vector = vector.tolist()
 
-        return PointStruct(id=_id, vector=vector, payload=payload)
+        sparse_embedding = payload.pop("sparse_embedding", None)
+        if sparse_embedding and isinstance(sparse_embedding, dict):
+            sparse_vector = {
+                "text": SparseVector(
+                    indices=sparse_embedding["indices"],
+                    values=sparse_embedding["values"]
+                )
+            }
+        else:
+            sparse_vector = None
+
+        return PointStruct(id=_id, vector=vector or {}, payload=payload, sparse_vectors=sparse_vector)
 
     def model_dump(self, **kwargs):
         dict_ = super().model_dump(**kwargs)
@@ -89,9 +100,10 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
         return True
 
     @classmethod
-    def create_collection(cls: Type[T], vector_size: int = 384) -> bool:
+    def create_collection(cls: Type[T]) -> bool:
         collection_name = cls.get_collection_name()
         use_vector_index = cls.get_use_vector_index()
+        use_sparse_vector_index = cls.get_use_sparse_vector_index()
 
         if use_vector_index is True:
             vectors_config = VectorParams(
@@ -100,15 +112,28 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
             )
         else:
             vectors_config = {}
+            
+        sparse_vectors_config = None
+        if use_sparse_vector_index is True:
+            sparse_vectors_config = {"text": SparseVectorParams(modifier=Modifier.IDF)}
 
-
-        return connection.create_collection(collection_name=collection_name, vectors_config=vectors_config)
+        return connection.create_collection(
+            collection_name=collection_name,
+            vectors_config=vectors_config,
+            sparse_vectors_config=sparse_vectors_config
+        )
 
     @classmethod
     def get_use_vector_index(cls: Type[T]) -> bool:
         if not hasattr(cls, "Config") or not hasattr(cls.Config, "use_vector_index"):
             return True
         return cls.Config.use_vector_index
+    
+    @classmethod
+    def get_use_sparse_vector_index(cls) -> bool:
+        if not hasattr(cls, "Config") or not hasattr(cls.Config, "use_sparse_vector_index"):
+            return True
+        return cls.Config.use_sparse_vector_index
 
     @classmethod
     def _bulk_insert(cls: Type[T], documents):
@@ -164,13 +189,24 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
         return documents
 
     @classmethod
+    def hybrid_search(cls: Type[T], query_vector: list, sparse_query_vector: dict, limit: int = 10, **kwargs) -> list[T]:
+        try:
+            documents = cls._hybrid_search(
+                query_vector=query_vector,
+                sparse_query_vector=sparse_query_vector,
+                limit=limit,
+                **kwargs
+            )
+        except exceptions.UnexpectedResponse:
+            logger.error(f"Failed to hybrid search in '{cls.get_collection_name()}'.")
+            documents = []
+        return documents
+
+    @classmethod
     def _search(cls: Type[T], query_vector: list, limit: int = 10, **kwargs) -> list[T]:
         collection_name = cls.get_collection_name()
-
-        # Check if this model has embedding field to determine if we need vectors
         needs_vectors = hasattr(cls, 'model_fields') and 'embedding' in cls.model_fields
 
-        # Qdrant client API: search → query_points (newer versions)
         records = connection.query_points(
             collection_name=collection_name,
             query=query_vector,
@@ -178,6 +214,37 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
             with_payload=kwargs.pop("with_payload", True),
             with_vectors=kwargs.pop("with_vectors", needs_vectors),
             **kwargs,
+        ).points
+
+        documents = [cls.from_record(record) for record in records]
+        return documents
+
+    @classmethod
+    def _hybrid_search(cls: Type[T], query_vector: list, sparse_query_vector: dict, limit: int = 10, **kwargs) -> list[T]:
+        from qdrant_client.models import Prefetch
+        
+        collection_name = cls.get_collection_name()
+        needs_vectors = hasattr(cls, 'model_fields') and 'embedding' in cls.model_fields
+        query_filter = kwargs.pop("query_filter", None)
+
+        records = connection.query_points(
+            collection_name=collection_name,
+            prefetch=[
+                Prefetch(
+                    query={
+                        "indices": sparse_query_vector["indices"],
+                        "values": sparse_query_vector["values"]
+                    },
+                    using="text",
+                    limit=limit
+                ),
+                Prefetch(query=query_vector, limit=limit)
+            ],
+            query={"fusion": "rrf"},
+            limit=limit,
+            query_filter=query_filter,
+            with_payload=kwargs.pop("with_payload", True),
+            with_vectors=kwargs.pop("with_vectors", needs_vectors),
         ).points
 
         documents = [cls.from_record(record) for record in records]
@@ -209,6 +276,4 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
             )
 
         return cls.Config.category
-
-
-
+    

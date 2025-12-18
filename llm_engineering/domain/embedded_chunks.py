@@ -5,6 +5,7 @@ from .orm import VectorBaseDocument
 class EmbeddedChunk(VectorBaseDocument):
     content: str
     embedding: list[float] | None
+    sparse_embedding: dict | None = None
     document_id: str
     document_number: str
     document_type: str
@@ -15,6 +16,7 @@ class EmbeddedChunk(VectorBaseDocument):
     class Config:
         name = "embedded_chunks"
         use_vector_index = True
+        use_sparse_vector_index = True
 
     @classmethod
     def to_context(cls, chunks: list["EmbeddedChunk"]) -> str:

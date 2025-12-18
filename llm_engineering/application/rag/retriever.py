@@ -62,12 +62,21 @@ class ContextRetriever:
         # Build Qdrant filters from metadata
         query_filter = self._build_filter(query.metadata)
 
-        # Search in Qdrant
-        search_results = EmbeddedChunk.search(
-            query_vector=embedded_query.embedding,
-            limit=k // 3,
-            query_filter=query_filter
-        )
+        # Use hybrid search if sparse embedding available
+        if embedded_query.sparse_embedding:
+            search_results = EmbeddedChunk.hybrid_search(
+                query_vector=embedded_query.embedding,
+                sparse_query_vector=embedded_query.sparse_embedding,
+                limit=k // 3,
+                query_filter=query_filter
+            )
+        else:
+            # Fallback to dense-only search
+            search_results = EmbeddedChunk.search(
+                query_vector=embedded_query.embedding,
+                limit=k // 3,
+                query_filter=query_filter
+            )
 
         logger.info(
             f"Found {len(search_results)} chunks for query",

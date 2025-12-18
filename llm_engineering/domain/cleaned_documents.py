@@ -17,5 +17,6 @@ class CleanedDocument(VectorBaseDocument):
     class Config:
         name = "cleaned_documents"
         use_vector_index = False
+        use_sparse_vector_index = False
 
 

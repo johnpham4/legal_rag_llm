@@ -2,11 +2,8 @@ settings:
   docker:
     parent_image: pytorch/pytorch:2.2.0-cuda11.8-cudnn8-runtime
     skip_build: True
-  orchestrator.sagemaker:
-    synchronous: false
 
 parameters:
   query_limit: null
-  batch_size: 10
-  use_sparse: true
-  sparse_model_path: models/sparse_bm25_model.pkl
+  algorithm: bm25
+  save_path: models/sparse_bm25_model.pkl

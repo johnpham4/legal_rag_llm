@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     DATABASE_NAME: str = "legal"
 
     # RAG
-    TEXT_EMBEDDING_MODEL_ID: str = "sentence-transformers/all-MiniLM-L6-v2"
+    TEXT_EMBEDDING_MODEL_ID: str = "keepitreal/vietnamese-sbert"  # Vietnamese dense embedding
     RERANKING_CROSS_ENCODER_MODEL_ID: str = "cross-encoder/ms-marco-MiniLM-L-4-v2"
     RAG_MODEL_DEVICE: str = "cpu"
 

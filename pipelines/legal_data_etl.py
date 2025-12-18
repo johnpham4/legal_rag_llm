@@ -1,5 +1,5 @@
 from zenml import pipeline
-from steps.crawl_legal_links import crawl_legal_links
+from steps.crawling.crawl_legal_links import crawl_legal_links
 
 
 @pipeline
