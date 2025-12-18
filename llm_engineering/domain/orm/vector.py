@@ -51,17 +51,18 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
             vector = vector.tolist()
 
         sparse_embedding = payload.pop("sparse_embedding", None)
-        if sparse_embedding and isinstance(sparse_embedding, dict):
-            sparse_vector = {
-                "text": SparseVector(
-                    indices=sparse_embedding["indices"],
-                    values=sparse_embedding["values"]
-                )
-            }
-        else:
-            sparse_vector = None
 
-        return PointStruct(id=_id, vector=vector or {}, payload=payload, sparse_vectors=sparse_vector)
+        sparse_vector = SparseVector(
+            indices=sparse_embedding.get("indices", []) if sparse_embedding else [],
+            values=sparse_embedding.get("values", []) if sparse_embedding else []
+        )
+
+        vectors = {
+            "dense": vector,
+            "text": sparse_vector
+        }
+
+        return PointStruct(id=_id, vector=vectors, payload=payload)
 
     def model_dump(self, **kwargs):
         dict_ = super().model_dump(**kwargs)
@@ -105,17 +106,25 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
         use_vector_index = cls.get_use_vector_index()
         use_sparse_vector_index = cls.get_use_sparse_vector_index()
 
-        if use_vector_index is True:
+        if use_sparse_vector_index is True:
+            vectors_config = {
+                "dense": VectorParams(
+                    size=EmbeddingModelSingleton().embedding_size,
+                    distance=Distance.COSINE
+                )
+            }
+
+            sparse_vectors_config = {"text": SparseVectorParams(modifier=Modifier.IDF)}
+
+        elif use_vector_index is True:
             vectors_config = VectorParams(
                 size=EmbeddingModelSingleton().embedding_size,
                 distance=Distance.COSINE
             )
+            sparse_vectors_config = None
         else:
             vectors_config = {}
-            
-        sparse_vectors_config = None
-        if use_sparse_vector_index is True:
-            sparse_vectors_config = {"text": SparseVectorParams(modifier=Modifier.IDF)}
+            sparse_vectors_config = None
 
         return connection.create_collection(
             collection_name=collection_name,
@@ -128,7 +137,7 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
         if not hasattr(cls, "Config") or not hasattr(cls.Config, "use_vector_index"):
             return True
         return cls.Config.use_vector_index
-    
+
     @classmethod
     def get_use_sparse_vector_index(cls) -> bool:
         if not hasattr(cls, "Config") or not hasattr(cls.Config, "use_sparse_vector_index"):
@@ -206,15 +215,21 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
     def _search(cls: Type[T], query_vector: list, limit: int = 10, **kwargs) -> list[T]:
         collection_name = cls.get_collection_name()
         needs_vectors = hasattr(cls, 'model_fields') and 'embedding' in cls.model_fields
+        use_sparse = cls.get_use_sparse_vector_index()
 
-        records = connection.query_points(
-            collection_name=collection_name,
-            query=query_vector,
-            limit=limit,
-            with_payload=kwargs.pop("with_payload", True),
-            with_vectors=kwargs.pop("with_vectors", needs_vectors),
-            **kwargs,
-        ).points
+        # When collection has sparse vectors, specify "dense" vector name
+        query_params = {
+            "collection_name": collection_name,
+            "query": query_vector,
+            "limit": limit,
+            "with_payload": kwargs.pop("with_payload", True),
+            "with_vectors": kwargs.pop("with_vectors", needs_vectors),
+        }
+
+        if use_sparse:
+            query_params["using"] = "dense"
+
+        records = connection.query_points(**query_params, **kwargs).points
 
         documents = [cls.from_record(record) for record in records]
         return documents
@@ -222,7 +237,7 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
     @classmethod
     def _hybrid_search(cls: Type[T], query_vector: list, sparse_query_vector: dict, limit: int = 10, **kwargs) -> list[T]:
         from qdrant_client.models import Prefetch
-        
+
         collection_name = cls.get_collection_name()
         needs_vectors = hasattr(cls, 'model_fields') and 'embedding' in cls.model_fields
         query_filter = kwargs.pop("query_filter", None)
@@ -238,7 +253,7 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
                     using="text",
                     limit=limit
                 ),
-                Prefetch(query=query_vector, limit=limit)
+                Prefetch(query=query_vector, using="dense", limit=limit)
             ],
             query={"fusion": "rrf"},
             limit=limit,
@@ -276,4 +291,4 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
             )
 
         return cls.Config.category
-    
+

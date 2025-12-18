@@ -120,13 +120,15 @@ class NoSQLBaseDocument(BaseModel, Generic[T], ABC):
     # The bulk_find() class method retrieves multiple documents matching the filter options.
     # It converts each retrieved MongoDB document into a model instance, collecting them into a list:
     @classmethod
-    def bulk_find(cls: Type[T], **filter_options) -> list[T]:
+    def bulk_find(cls: Type[T], limit: int | None = None, **filter_options) -> list[T]:
         collection = _database[cls.get_collection_name()]
         try:
-            instances = collection.find(filter_options)
+            cursor = collection.find(filter_options)
+            if limit is not None:
+                cursor = cursor.limit(limit)
             return [
                 document
-                for instance in instances
+                for instance in cursor
                 if (document := cls.from_mongo(instance))
             ]
         except errors.OperationFailure:

@@ -28,16 +28,16 @@ parameters:
   - https://thuvienphapluat.vn/van-ban/Thue-Phi-Le-Phi/Nghi-quyet-04-2012-NQ-HDND-muc-thu-phi-su-dung-tam-thoi-mot-phan-long-duong-172233.aspx
   - https://thuvienphapluat.vn/van-ban/Thue-Phi-Le-Phi/Nghi-quyet-12-2012-NQ-HDND-thu-mien-giam-hoc-phi-chi-phi-hoc-tap-mam-non-pho-thong-Khanh-Hoa-290881.aspx
 
-  # - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Huong-dan-lien-so-372-HDLS-NV-TC-2012-thu-hut-ho-tro-dao-tao-phat-trien-nguon-nhan-luc-Binh-Duong-286547.aspx
-  # - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Quyet-dinh-14-2012-QD-UBND-quy-dinh-muc-phu-cap-hang-thang-145514.aspx
-  # - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Quyet-dinh-13-2012-QD-UBND-muc-phu-cap-hang-thang-bao-ve-dan-pho-Lai-Chau-251441.aspx
-  # - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Quyet-dinh-816-QD-UBND-nam-2012-cong-bo-thu-tuc-hanh-chinh-sua-doi-141798.aspx
-  # - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Quyet-dinh-1233-QD-UBND-nam-2012-cong-bo-thu-tuc-hanh-chinh-144392.aspx
-  # - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Quyet-dinh-27-2012-QD-TTg-quy-dinh-che-do-phu-cap-trach-nhiem-theo-nghe-140617.aspx
-  # - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Quyet-dinh-33-2012-QD-UBND-Quy-dinh-che-do-chinh-sach-dao-tao-boi-duong-146722.aspx
-  # - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Quyet-dinh-12-2012-QD-UBND-quy-che-to-chuc-tuyen-dung-cong-chuc-xa-phuong-176734.aspx
-  # - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Quyet-dinh-19-2012-QD-UBND-Quy-dinh-nang-bac-luong-truoc-thoi-han-doi-voi-can-bo-140675.aspx
-  # - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Quyet-dinh-1733-QD-UBND-nam-2012-cong-bo-thu-tuc-hanh-chinh-145496.aspx
+  - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Huong-dan-lien-so-372-HDLS-NV-TC-2012-thu-hut-ho-tro-dao-tao-phat-trien-nguon-nhan-luc-Binh-Duong-286547.aspx
+  - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Quyet-dinh-14-2012-QD-UBND-quy-dinh-muc-phu-cap-hang-thang-145514.aspx
+  - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Quyet-dinh-13-2012-QD-UBND-muc-phu-cap-hang-thang-bao-ve-dan-pho-Lai-Chau-251441.aspx
+  - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Quyet-dinh-816-QD-UBND-nam-2012-cong-bo-thu-tuc-hanh-chinh-sua-doi-141798.aspx
+  - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Quyet-dinh-1233-QD-UBND-nam-2012-cong-bo-thu-tuc-hanh-chinh-144392.aspx
+  - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Quyet-dinh-27-2012-QD-TTg-quy-dinh-che-do-phu-cap-trach-nhiem-theo-nghe-140617.aspx
+  - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Quyet-dinh-33-2012-QD-UBND-Quy-dinh-che-do-chinh-sach-dao-tao-boi-duong-146722.aspx
+  - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Quyet-dinh-12-2012-QD-UBND-quy-che-to-chuc-tuyen-dung-cong-chuc-xa-phuong-176734.aspx
+  - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Quyet-dinh-19-2012-QD-UBND-Quy-dinh-nang-bac-luong-truoc-thoi-han-doi-voi-can-bo-140675.aspx
+  - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Quyet-dinh-1733-QD-UBND-nam-2012-cong-bo-thu-tuc-hanh-chinh-145496.aspx
   # - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Quyet-dinh-854-QD-UBND-nam-2012-dieu-chinh-don-gia-ngay-cong-lao-dong-nong-nhan-144606.aspx
   # - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Quyet-dinh-1026-QD-UBND-De-an-quy-hoach-tong-the-phat-trien-nganh-nghe-nong-thon-Ha-Giang-2012-294654.aspx
   # - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Quyet-dinh-1274-2012-QD-UBND-ho-tro-tien-an-cho-lao-dong-nong-thon-tren-dia-ban-149500.aspx

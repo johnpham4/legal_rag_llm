@@ -3,7 +3,7 @@ from zenml import get_step_context, step
 
 from llm_engineering.application import utils
 from llm_engineering.application.preprocessing.dispatchers import ChunkingDispatcher, EmbeddingDispatcher
-from llm_engineering.application.networks.sparse_model_utils import load_sparse_model
+from llm_engineering.application.preprocessing.embedding_data_handler import sparse_embedding_model
 from llm_engineering.domain.chunks import Chunk
 from llm_engineering.domain.embedded_chunks import EmbeddedChunk
 
@@ -12,19 +12,25 @@ from llm_engineering.domain.embedded_chunks import EmbeddedChunk
 def chunk_and_embed(
     cleaned_documents: Annotated[list, "cleaned_documents"],
     batch_size: int = 10,
-    use_sparse: bool = True,
     sparse_model_path: str | None = None,
 ) -> Annotated[list, "embedded_documents"]:
     from loguru import logger
+
+    # Load pre-trained sparse model into global singleton instance
+    if sparse_model_path:
+        logger.info(f"Loading sparse model from {sparse_model_path}")
+        sparse_embedding_model.load(sparse_model_path)
+        logger.info(f"Loaded sparse model with vocab size: {sparse_embedding_model.vocab_size}")
 
     chunking_dispatcher = ChunkingDispatcher()
     embedding_dispatcher = EmbeddingDispatcher()
 
     metadata = {
         "chunking": {},
-        "embedding": {"batch_size": batch_size, "use_sparse": use_sparse},
-        "num_documents": len(cleaned_documents),
-        "failed_documents": 0,
+        "embedding": {
+            "batch_size": batch_size,
+            "sparse_model_path": sparse_model_path,
+        }
     }
 
     embedded_chunks = []
@@ -34,7 +40,7 @@ def chunk_and_embed(
             metadata["chunking"] = _add_chunks_metadata(chunks, metadata["chunking"])
 
             for batched_chunks in utils.misc.batch(chunks, batch_size):
-                batched_embedded_chunks = embedding_dispatcher.embed_chunks(batched_chunks, use_sparse=use_sparse)
+                batched_embedded_chunks = embedding_dispatcher.embed_chunks(batched_chunks)
                 embedded_chunks.extend(batched_embedded_chunks)
         except Exception:
             logger.exception(f"Failed to process document {document.id}")

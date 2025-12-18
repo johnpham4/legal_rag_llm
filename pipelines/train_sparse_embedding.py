@@ -1,5 +1,5 @@
 from zenml import pipeline
-import steps.sparse_encoder_training.train as sparse_steps
+import steps.sparse_encoder_training as sparse_steps
 
 
 @pipeline

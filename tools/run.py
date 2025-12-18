@@ -5,7 +5,7 @@ import click
 from loguru import logger
 
 from llm_engineering import settings
-from pipelines import legal_data_etl, feature_engineering
+from pipelines import legal_data_etl, feature_engineering, train_sparse_model
 
 @click.command(
     help="""
@@ -53,12 +53,19 @@ Examples:
     default=False,
     help="Whether to run the FE pipeline.",
 )
+@click.option(
+    "--run-train-sparse-model",
+    is_flag=True,
+    default=False,
+    help="Run the training sparse model pipline.",
+)
 def main(
     no_cache: bool = False,
     run_legal_etl: bool = False,
     run_feature_engineering: bool = False,
+    run_train_sparse_model: bool = False,
 ):
-    assert run_legal_etl or run_feature_engineering, "Please use one of the options"
+    assert run_legal_etl or run_feature_engineering or run_train_sparse_model, "Please use one of the options"
 
     pipeline_args = {
         "enable_cache": not no_cache,
@@ -82,6 +89,13 @@ def main(
         logger.info("Starting Feature Engineering Pipeline for Vietnamese legal documents")
         feature_engineering.with_options(**pipeline_args)()
 
+    if run_train_sparse_model:
+        pipeline_args["config_path"] = root_dir / "configs" / "train_sparse_embedding.yaml"
+        assert pipeline_args["config_path"].exists(), f"Config file not found: {pipeline_args['config_path']}"
+        pipeline_args["run_name"] = f"feature_engineering_run_{dt.now().strftime('%Y_%m_%d_%H_%M_%S')}"
+
+        logger.info("Starting Feature Engineering Pipeline for Vietnamese legal documents")
+        train_sparse_model.with_options(**pipeline_args)()
 
 if __name__ == "__main__":
     main()

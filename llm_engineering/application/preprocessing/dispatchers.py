@@ -50,17 +50,17 @@ class EmbeddingDispatcher:
         self._legal_handler = LegalEmbeddingHandler()
         self._query_handler = QueryEmbeddingHandler()
 
-    def embed_chunks(self, chunks: list[Chunk], use_sparse: bool = True) -> list[EmbeddedChunk]:
+    def embed_chunks(self, chunks: list[Chunk]) -> list[EmbeddedChunk]:
         if not chunks:
             return []
 
-        embedded = self._legal_handler.embed_batch(chunks, use_sparse=use_sparse)
+        embedded = self._legal_handler.embed_batch(chunks)
         logger.info("Chunks embedded", num=len(chunks))
         return embedded
 
     def embed_query(self, query: Query, use_sparse: bool = True) -> EmbeddedQuery:
         embedded = self._query_handler.embed(query, use_sparse=use_sparse)
-        logger.info("Query embedded", query_id=str(query.id))
+        logger.info("Query embedded", query_id=str(query.id), use_sparse=use_sparse)
         return embedded
 
     def embed_queries(self, queries: list[Query], use_sparse: bool = True) -> list[EmbeddedQuery]:
@@ -68,5 +68,5 @@ class EmbeddingDispatcher:
             return []
 
         embedded = self._query_handler.embed_batch(queries, use_sparse=use_sparse)
-        logger.info("Queries embedded", num=len(queries))
+        logger.info("Queries embedded", num=len(queries), use_sparse=use_sparse)
         return embedded

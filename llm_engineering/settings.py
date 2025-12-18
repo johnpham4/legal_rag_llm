@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     COHERE_MODEL_ID: str = "command-r-08-2024"
     COHERE_API_KEY: str | None = None
 
+    SPARSE_ALGORITHM: str = "bm25"
+
     # QdrantDB Vector DB
     USE_QDRANT_CLOUD: bool = False
     QDRANT_DATABASE_HOST: str = "localhost"

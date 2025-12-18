@@ -12,11 +12,7 @@ from llm_engineering.domain.documents import Document
 def query_data_warehouse(
     query_limit: int | None = None,
 ) -> Annotated[list, "raw_documents"]:
-    """Query raw documents from MongoDB.
 
-    Args:
-        query_limit: Maximum number of documents to fetch (None = all)
-    """
     results = fetch_all_data(query_limit=query_limit)
 
     documents = [doc for query_result in results.values() for doc in query_result]

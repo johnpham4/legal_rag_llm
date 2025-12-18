@@ -4,6 +4,7 @@ import pickle
 from pathlib import Path
 from collections import Counter
 from functools import lru_cache
+from tqdm import tqdm
 
 from .base import BaseSparseEncoder
 
@@ -32,7 +33,7 @@ class BM25Encoder(BaseSparseEncoder):
         total_doc_len = 0  # Sum of all document lengths
 
         # Step 1: Count document frequency and total length
-        for text in corpus:
+        for text in tqdm(corpus, desc="Building BM25 vocabulary"):
             tokens = self._tokenize(text)
             total_doc_len += len(tokens)
 
@@ -99,12 +100,17 @@ class BM25Encoder(BaseSparseEncoder):
             pickle.dump(state, f)
         return True
 
-    def load(self, model_path: str):
+    @classmethod
+    def load(cls, model_path: str):
         with open(model_path, "rb") as f:
             state = pickle.load(f)
-        instance = self(max_terms=state["max_terms"], k1=state["k1"], b=state["b"])
+        instance = cls(max_terms=state["max_terms"], k1=state["k1"], b=state["b"])
         instance.vocab = state["vocab"]
         instance.idf = state["idf"]
         instance.avgdl = state["avgdl"]
         instance._is_fitted = True
         return instance
+
+    @classmethod
+    def algorithm(cls) -> "BM25Encoder":
+        return cls.__class__

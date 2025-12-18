@@ -2,8 +2,6 @@ import re
 from typing import List
 from loguru import logger
 
-# from llm_engineering.application.networks import EmbeddingModelSingleton
-
 
 def chunk_legal_document(
     text: str,

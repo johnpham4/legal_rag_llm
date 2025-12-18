@@ -17,7 +17,7 @@ dependencies = [
     "rich>=13.7.1",
     "numpy==1.26.4",
     "datasets>=3.0.1",
-    "torch==2.2.2",
+    "torch>=2.6.0",
     # Digital data ETL
     "selenium>=4.21.0",
     "webdriver-manager>=4.0.1",

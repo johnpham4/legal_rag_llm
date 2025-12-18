@@ -24,7 +24,8 @@ class ContextRetriever:
         self,
         query: str,
         k: int = 3,
-        expand_to_n_queries: int = 3
+        expand_to_n_queries: int = 3,
+        use_sparse: bool = True
     ) -> list:
         query_model = Query.from_str(query)
         query_model = self._metadata_extractor.generate(query_model)
@@ -33,11 +34,12 @@ class ContextRetriever:
         logger.info(
             "Successfully generated queries for search.",
             num_queries=len(n_generated_queries),
+            use_sparse=use_sparse
         )
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             search_tasks = [executor.submit(
-                self._search, _query_model, k) for _query_model in n_generated_queries
+                self._search, _query_model, k, use_sparse) for _query_model in n_generated_queries
             ]
 
             n_k_documents = [task.result() for task in concurrent.futures.as_completed(search_tasks)]
@@ -53,11 +55,11 @@ class ContextRetriever:
 
         return k_documents
 
-    def _search(self, query: Query, k: int = 3) -> list[EmbeddedChunk]:
+    def _search(self, query: Query, k: int = 3, use_sparse: bool = True) -> list[EmbeddedChunk]:
         assert k >= 3, "k should be >= 3"
 
         # Embed query using EmbeddingDispatcher
-        embedded_query: EmbeddedQuery = self._embedding_dispatcher.embed_query(query)
+        embedded_query: EmbeddedQuery = self._embedding_dispatcher.embed_query(query, use_sparse=use_sparse)
 
         # Build Qdrant filters from metadata
         query_filter = self._build_filter(query.metadata)

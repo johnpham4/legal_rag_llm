@@ -4,6 +4,7 @@ import pickle
 from pathlib import Path
 from collections import Counter, defaultdict
 from functools import lru_cache
+from tqdm import tqdm
 
 from .base import BaseSparseEncoder
 
@@ -30,7 +31,7 @@ class TFIDFEncoder(BaseSparseEncoder):
         N = len(corpus)  # Number of documents
 
         # Step 1: Count document frequency
-        for text in corpus:
+        for text in tqdm(corpus, desc="Building TF-IDF vocabulary"):
             tokens = set(self._tokenize(text))  # Unique tokens per document
             for term in tokens:
                 df[term] += 1
@@ -90,11 +91,16 @@ class TFIDFEncoder(BaseSparseEncoder):
             pickle.dump(state, f)
         return True
 
-    def load(self, model_path: str):
+    @classmethod
+    def load(cls, model_path: str):
         with open(model_path, "rb") as f:
             state = pickle.load(f)
-        instance = self(max_terms=state["max_terms"])
+        instance = cls(max_terms=state["max_terms"])
         instance.vocab = state["vocab"]
         instance.idf = state["idf"]
         instance._is_fitted = True
         return instance
+
+    @classmethod
+    def algorithm(cls) -> "TFIDFEncoder":
+        return cls.__class__

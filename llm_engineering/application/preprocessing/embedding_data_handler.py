@@ -1,17 +1,18 @@
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar, cast
 
+from llm_engineering import settings
 from llm_engineering.application.networks import EmbeddingModelSingleton, SparseEmbeddingModelSingleton
 from llm_engineering.domain.chunks import Chunk
 from llm_engineering.domain.embedded_chunks import EmbeddedChunk
 from llm_engineering.domain.queries import EmbeddedQuery, Query
 
+
 ChunkT = TypeVar("ChunkT", bound=Chunk)
 EmbeddedChunkT = TypeVar("EmbeddedChunkT", bound=EmbeddedChunk)
 
 embedding_model = EmbeddingModelSingleton()
-sparse_embedding_model = SparseEmbeddingModelSingleton()
-
+sparse_embedding_model = SparseEmbeddingModelSingleton(algorithm=settings.SPARSE_ALGORITHM)
 
 class EmbeddingDataHandler(ABC, Generic[ChunkT, EmbeddedChunkT]):
 
@@ -27,16 +28,13 @@ class EmbeddingDataHandler(ABC, Generic[ChunkT, EmbeddedChunkT]):
             for text in embedding_model_input:
                 sparse_emb = sparse_embedding_model(text, to_list=False)
                 sparse_embeddings.append(sparse_emb)
-
-            embedded_chunks = [
-                self.map_model(data_model, cast(list[float], embedding), sparse_emb)
-                for data_model, embedding, sparse_emb in zip(data_models, embeddings, sparse_embeddings, strict=False)
-            ]
         else:
-            embedded_chunks = [
-                self.map_model(data_model, cast(list[float], embedding), None)
-                for data_model, embedding in zip(data_models, embeddings, strict=False)
-            ]
+            sparse_embeddings = [None] * len(data_models)
+
+        embedded_chunks = [
+            self.map_model(data_model, cast(list[float], embedding), sparse_emb)
+            for data_model, embedding, sparse_emb in zip(data_models, embeddings, sparse_embeddings, strict=False)
+        ]
 
         return embedded_chunks
 
