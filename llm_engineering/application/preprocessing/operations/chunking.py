@@ -81,20 +81,16 @@ def chunk_legal_document(
 
     # Route to appropriate chunking strategy
     if has_chuong and has_dieu:
-        # Case 1: Full structure with Chương and Điều
-        logger.debug("Chunking strategy: Chương → Điều → Khoản")
+        # logger.debug("Chunking strategy: Chương → Điều → Khoản")
         content_chunks = _chunk_with_chuong(main_content, max_length)
     elif has_dieu:
-        # Case 2: Has Điều but no Chương
-        logger.debug("Chunking strategy: Điều → Khoản")
+
         content_chunks = _chunk_by_dieu(main_content, max_length)
     elif has_khoan:
-        # Case 3: Only Khoản and below (no Chương, no Điều)
-        logger.debug("Chunking strategy: Khoản → Điểm")
+        # logger.debug("Chunking strategy: Khoản → Điểm")
         content_chunks = _chunk_by_khoan_only(main_content, max_length)
     else:
-        # Fallback: no clear structure, split by size
-        logger.warning("No legal structure detected, using fallback chunking")
+        # logger.warning("No legal structure detected, using fallback chunking")
         content_chunks = _chunk_by_size(main_content, max_length)
 
     chunks.extend(content_chunks)

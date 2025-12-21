@@ -23,7 +23,7 @@ def crawl_legal_links(
     success_count = 0
     for link in tqdm(legal_links, desc="Crawling links and save to mongodb"):
         try:
-            logger.info(f"Processing: {link}")
+            # logger.info(f"Processing: {link}")
             crawler = dispatcher.get_crawler(link)
             crawler.extract(link=link)
             success_count += 1

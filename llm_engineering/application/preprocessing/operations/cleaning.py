@@ -8,19 +8,10 @@ def clean_text(text: str) -> str:
 
 
 def clean_legal_text(text: str) -> str:
-    """
-    Clean legal document text while preserving legal structure.
 
-    Preserves:
-    - Chương (Chapter) markers
-    - Điều (Article) markers
-    - Khoản (Clause) markers with numbers
-    - Điểm (Point) markers with letters
-    """
     if not text:
         return ""
 
-    # Normalize whitespace but keep line breaks for structure
     text = text.replace('\xa0', ' ').replace('\r', '')
 
     # Remove excessive dashes and asterisks

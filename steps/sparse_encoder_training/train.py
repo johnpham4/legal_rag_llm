@@ -4,19 +4,15 @@ from zenml import step, get_step_context
 from loguru import logger
 
 from llm_engineering.application.preprocessing.dispatchers import ChunkingDispatcher
-from llm_engineering.application.networks import SparseEmbeddingModelSingleton
+from llm_engineering.application.networks import get_sparse_encoder
 
 
 @step
 def train(
     cleaned_documents: Annotated[list, "cleaned_documents"],
-    save_path: str | None = None,
 ) -> Annotated[int, "num_trained"]:
 
     algorithm = settings.SPARSE_ALGORITHM
-
-    if save_path is None:
-        save_path = f"models/sparse_{algorithm}_model.pkl"
 
     chunking_dispatcher = ChunkingDispatcher()
 
@@ -34,16 +30,16 @@ def train(
 
     logger.info(f"Collected {len(corpus)} chunks for training")
 
-    sparse_model = SparseEmbeddingModelSingleton(algorithm=algorithm)
+    sparse_encoder = get_sparse_encoder(algorithm=algorithm)
 
-    logger.info(f"Fitting {algorithm.upper()} sparse model...")
-    sparse_model.fit(corpus)
+    logger.info(f"Fitting {algorithm.upper()} sparse encoder...")
+    sparse_encoder.fit(corpus)
 
-    vocab_size = sparse_model.vocab_size
+    vocab_size = len(sparse_encoder.vocab)
     logger.info(f"Training complete! Vocabulary size: {vocab_size}")
 
-    logger.info(f"Saving model to {save_path}")
-    sparse_model.save(save_path)
+    logger.info(f"Saving model to {settings.SPARSE_MODEL_PATH}")
+    sparse_encoder.save(settings.SPARSE_MODEL_PATH)
 
     step_context = get_step_context()
     step_context.add_output_metadata(
@@ -54,7 +50,7 @@ def train(
             "corpus_size": len(corpus),
             "num_documents": len(cleaned_documents),
             "failed_documents": failed_count,
-            "save_path": save_path,
+            "save_path": settings.SPARSE_MODEL_PATH,
         }
     )
 

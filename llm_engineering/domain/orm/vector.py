@@ -8,8 +8,8 @@ from llm_engineering.application.networks.embedding import EmbeddingModelSinglet
 from loguru import logger
 
 from qdrant_client.http import exceptions
-from qdrant_client.http.models import Distance, VectorParams, SparseVectorParams, Modifier
-from qdrant_client.models import CollectionInfo, PointStruct, Record, SparseVector
+from qdrant_client.http.models import Distance, VectorParams, SparseVectorParams, Modifier, Fusion
+from qdrant_client.models import PointStruct, Record, SparseVector, FusionQuery
 
 from llm_engineering.infrastructure.db.qdrant import connection
 from llm_engineering.domain.exceptions import ImproperlyConfigured
@@ -37,7 +37,10 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
         }
         # Check if model has embedding field and add vector if available
         if hasattr(cls, 'model_fields') and 'embedding' in cls.model_fields:
-            attributes['embedding'] = point.vector or None
+            if isinstance(point.vector, dict):
+                attributes['embedding'] = point.vector.get('dense', None)
+            else:
+                attributes['embedding'] = point.vector or None
         return cls(**attributes)
 
     def to_point(self: T, **kwargs) -> PointStruct:
@@ -206,8 +209,11 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
                 limit=limit,
                 **kwargs
             )
-        except exceptions.UnexpectedResponse:
-            logger.error(f"Failed to hybrid search in '{cls.get_collection_name()}'.")
+        except exceptions.UnexpectedResponse as e:
+            logger.error(f"Failed to hybrid search in '{cls.get_collection_name()}': {str(e)}")
+            documents = []
+        except Exception as e:
+            logger.error(f"Unexpected error in hybrid search '{cls.get_collection_name()}': {type(e).__name__}: {str(e)}")
             documents = []
         return documents
 
@@ -216,6 +222,8 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
         collection_name = cls.get_collection_name()
         needs_vectors = hasattr(cls, 'model_fields') and 'embedding' in cls.model_fields
         use_sparse = cls.get_use_sparse_vector_index()
+
+        query_filter = kwargs.pop("query_filter", None)
 
         # When collection has sparse vectors, specify "dense" vector name
         query_params = {
@@ -228,6 +236,9 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
 
         if use_sparse:
             query_params["using"] = "dense"
+
+        if query_filter is not None:
+            query_params["filter"] = query_filter
 
         records = connection.query_points(**query_params, **kwargs).points
 
@@ -246,24 +257,30 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
             collection_name=collection_name,
             prefetch=[
                 Prefetch(
-                    query={
-                        "indices": sparse_query_vector["indices"],
-                        "values": sparse_query_vector["values"]
-                    },
+                    query=SparseVector(
+                        indices=sparse_query_vector["indices"],
+                        values=sparse_query_vector["values"]
+                    ),
                     using="text",
-                    limit=limit
+                    limit=limit,
+                    filter=query_filter
                 ),
-                Prefetch(query=query_vector, using="dense", limit=limit)
+                Prefetch(
+                    query=query_vector,
+                    using="dense",
+                    limit=limit,
+                    filter=query_filter
+                )
             ],
-            query={"fusion": "rrf"},
+            query=FusionQuery(fusion=Fusion.RRF),
             limit=limit,
-            query_filter=query_filter,
             with_payload=kwargs.pop("with_payload", True),
             with_vectors=kwargs.pop("with_vectors", needs_vectors),
         ).points
 
         documents = [cls.from_record(record) for record in records]
         return documents
+
 
     @classmethod
     def group_by_class(cls: Type[T], documents: list[T]) -> Dict[T, list[T]]:

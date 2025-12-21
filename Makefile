@@ -5,10 +5,13 @@
 uv:
 	uv sync --all-groups
 
+lab:
+	uv run jupyter lab --ip=127.0.0.1 --port 8000
+
 zenml_up:
 	docker compose up -d
 
-zenml_server:
+zenml:
 	uv run zenml connect --url http://localhost:8080 --username admin --password Admin@123
 
 etl:
@@ -20,11 +23,12 @@ fe:
 train:
 	uv run python -m tools.run --run-train-sparse-model --no-cache
 
-test:
-	uv run pytest tests/
-
 del:
 	uv run python scripts/delete_collections.py
 
-test_unit:
-	uv run pytest tests/integration/
+api:
+	uv run python llm_engineering/infrastructure/inference_pipeline_api.py
+
+eval:
+	uv run python 000-evaluate.py
+

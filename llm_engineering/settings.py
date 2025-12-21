@@ -1,3 +1,4 @@
+from pathlib import Path
 from loguru import logger
 from pydantic_settings import BaseSettings, SettingsConfigDict
 # from zenml.client import Client
@@ -23,7 +24,13 @@ class Settings(BaseSettings):
     COHERE_MODEL_ID: str = "command-r-08-2024"
     COHERE_API_KEY: str | None = None
 
-    SPARSE_ALGORITHM: str = "bm25"
+    SPARSE_ALGORITHM: str = "tfidf"
+
+    @property
+    def SPARSE_MODEL_PATH(self) -> str:
+        """Return absolute path to sparse model."""
+        project_root = Path(__file__).parent.parent
+        return str((project_root / f"models/sparse_{self.SPARSE_ALGORITHM}_model.pkl").resolve())
 
     # QdrantDB Vector DB
     USE_QDRANT_CLOUD: bool = False
@@ -40,12 +47,6 @@ class Settings(BaseSettings):
 
     @classmethod
     def load_settings(cls) -> "Settings":
-        """
-        Tries to load the settings from the ZenML secret store. If the secret does not exist, it initializes the settings from the .env file and default values.
-
-        Returns:
-            Settings: The initialized settings object.
-        """
 
         # try:
         #     logger.info("Loading settings from the ZenML secret store.")

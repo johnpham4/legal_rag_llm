@@ -1,9 +1,11 @@
 from typing_extensions import Annotated
 from zenml import get_step_context, step
+from tqdm.auto import tqdm
 
 from llm_engineering.application import utils
 from llm_engineering.application.preprocessing.dispatchers import ChunkingDispatcher, EmbeddingDispatcher
-from llm_engineering.application.preprocessing.embedding_data_handler import sparse_embedding_model
+from llm_engineering.application.networks import get_sparse_encoder
+from llm_engineering import settings
 from llm_engineering.domain.chunks import Chunk
 from llm_engineering.domain.embedded_chunks import EmbeddedChunk
 
@@ -19,8 +21,9 @@ def chunk_and_embed(
     # Load pre-trained sparse model into global singleton instance
     if sparse_model_path:
         logger.info(f"Loading sparse model from {sparse_model_path}")
-        sparse_embedding_model.load(sparse_model_path)
-        logger.info(f"Loaded sparse model with vocab size: {sparse_embedding_model.vocab_size}")
+        sparse_encoder = get_sparse_encoder(algorithm=settings.SPARSE_ALGORITHM)
+        loaded_encoder = sparse_encoder.__class__.load(sparse_model_path)
+        logger.info(f"Loaded sparse model with vocab size: {len(loaded_encoder.vocab)}")
 
     chunking_dispatcher = ChunkingDispatcher()
     embedding_dispatcher = EmbeddingDispatcher()
@@ -34,7 +37,7 @@ def chunk_and_embed(
     }
 
     embedded_chunks = []
-    for document in cleaned_documents:
+    for document in tqdm(cleaned_documents, desc="Processing documents", unit="doc"):
         try:
             chunks = chunking_dispatcher.chunk(document)
             metadata["chunking"] = _add_chunks_metadata(chunks, metadata["chunking"])

@@ -1,5 +1,6 @@
 from zenml import step, get_step_context
 from typing_extensions import Annotated
+from tqdm.auto import tqdm
 
 from llm_engineering.application.preprocessing.dispatchers import CleaningDispatcher
 from llm_engineering.domain.cleaned_documents import CleanedDocument
@@ -9,7 +10,7 @@ def clean_documents(
     documents: Annotated[list, "raw_documents"],
 ) -> Annotated[list, "cleaned_documents"]:
     dispatcher = CleaningDispatcher()
-    cleaned_documents = [dispatcher.clean(doc) for doc in documents]
+    cleaned_documents = [dispatcher.clean(doc) for doc in tqdm(documents)]
 
     step_context = get_step_context()
     step_context.add_output_metadata(output_name="cleaned_documents", metadata=_get_metadata(cleaned_documents))

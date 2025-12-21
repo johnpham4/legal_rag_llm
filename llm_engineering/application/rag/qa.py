@@ -8,8 +8,20 @@ class CohereInference:
         self.retriever = ContextRetriever(mock=mock)
         self.llm = CohereLLMClient()
 
-    def execute(self, query: str, k: int = 3, temperature: float = 0.3) -> dict:
-        documents = self.retriever.search(query, k=k)
+    def execute(
+        self,
+        query: str,
+        k: int = 3,
+        temperature: float = 0.3,
+        use_sparse: bool = True,
+        expand_to_n_queries: int = 3
+    ) -> dict:
+        documents = self.retriever.search(
+            query,
+            k=k,
+            use_sparse=use_sparse,
+            expand_to_n_queries=expand_to_n_queries
+        )
         context = EmbeddedChunk.to_context(documents)
 
         prompt = f"""Dựa vào ngữ cảnh sau để trả lời câu hỏi.

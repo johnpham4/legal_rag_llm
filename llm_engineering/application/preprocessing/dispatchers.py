@@ -21,11 +21,11 @@ class CleaningDispatcher:
 
     def clean(self, document: Document) -> CleanedDocument:
         cleaned = self._handler.clean(document)
-        logger.info(
-            "Document cleaned",
-            doc_id=str(document.id),
-            length=len(cleaned.content)
-        )
+        # logger.debug(
+        #     "Document cleaned",
+        #     doc_id=str(document.id),
+        #     length=len(cleaned.content)
+        # )
         return cleaned
 
 
@@ -36,11 +36,11 @@ class ChunkingDispatcher:
 
     def chunk(self, document: CleanedDocument) -> list[Chunk]:
         chunks = self._handler.chunk(document)
-        logger.info(
-            "Document chunked",
-            doc_id=str(document.id),
-            num_chunks=len(chunks)
-        )
+        # logger.debug(
+        #     "Document chunked",
+        #     doc_id=str(document.id),
+        #     num_chunks=len(chunks)
+        # )
         return chunks
 
 
@@ -55,7 +55,6 @@ class EmbeddingDispatcher:
             return []
 
         embedded = self._legal_handler.embed_batch(chunks)
-        logger.info("Chunks embedded", num=len(chunks))
         return embedded
 
     def embed_query(self, query: Query, use_sparse: bool = True) -> EmbeddedQuery:

@@ -1,5 +1,5 @@
 from .base import BaseSparseEncoder
-from .tfidf import TFIDFEncoder
-from .mb25 import BM25Encoder
+from .tfidf import TFIDFSparseEncoder
+from .mb25 import BM25SparseEncoder
 
-__all__ = ["BaseSparseEncoder", "TFIDFEncoder", "BM25Encoder"]
+__all__ = ["BaseSparseEncoder", "TFIDFSparseEncoder", "BM25SparseEncoder"]

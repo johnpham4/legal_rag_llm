@@ -29,10 +29,10 @@ class LegalDocumentCrawler(BaseCrawler):
         # Check existing
         existing = self.model.find(link=link)
         if existing:
-            logger.info(f"Document exists: {link}")
+            # logger.info(f"Document exists: {link}")
             return
 
-        logger.info(f"Crawling: {link}")
+        # logger.info(f"Crawling: {link}")
         time.sleep(2)
 
         try:
@@ -50,7 +50,7 @@ class LegalDocumentCrawler(BaseCrawler):
                 platform="thuvienphapluat.vn",
             )
             document.save()
-            logger.info(f"Saved: ({len(doc_data['content'])} chars)")
+            # logger.info(f"Saved: ({len(doc_data['content'])} chars)")
 
         except Exception as e:
             logger.error(f"Error: {link} - {e}")

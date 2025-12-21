@@ -2,17 +2,21 @@ from abc import ABC, abstractmethod
 from typing import Generic, TypeVar, cast
 
 from llm_engineering import settings
-from llm_engineering.application.networks import EmbeddingModelSingleton, SparseEmbeddingModelSingleton
+from llm_engineering.application.networks import EmbeddingModelSingleton, get_sparse_encoder
 from llm_engineering.domain.chunks import Chunk
 from llm_engineering.domain.embedded_chunks import EmbeddedChunk
 from llm_engineering.domain.queries import EmbeddedQuery, Query
+from loguru import logger
 
 
 ChunkT = TypeVar("ChunkT", bound=Chunk)
 EmbeddedChunkT = TypeVar("EmbeddedChunkT", bound=EmbeddedChunk)
 
 embedding_model = EmbeddingModelSingleton()
-sparse_embedding_model = SparseEmbeddingModelSingleton(algorithm=settings.SPARSE_ALGORITHM)
+
+def _get_sparse_encoder():
+    return get_sparse_encoder(algorithm=settings.SPARSE_ALGORITHM)
+
 
 class EmbeddingDataHandler(ABC, Generic[ChunkT, EmbeddedChunkT]):
 
@@ -24,10 +28,10 @@ class EmbeddingDataHandler(ABC, Generic[ChunkT, EmbeddedChunkT]):
         embeddings = embedding_model(embedding_model_input, to_list=True)
 
         if use_sparse:
-            sparse_embeddings = []
-            for text in embedding_model_input:
-                sparse_emb = sparse_embedding_model(text, to_list=False)
-                sparse_embeddings.append(sparse_emb)
+            sparse_encoder = _get_sparse_encoder()  # Lazy load
+            sparse_embeddings = sparse_encoder.encode(embedding_model_input)
+            if not isinstance(sparse_embeddings, list):
+                sparse_embeddings = [sparse_embeddings]
         else:
             sparse_embeddings = [None] * len(data_models)
 

@@ -1,8 +1,9 @@
 from typing import ClassVar
 from threading import Lock
+from abc import ABCMeta
 
-class SingletonMeta(type):
 
+class SingletonMeta(ABCMeta):
     _instances: ClassVar = {}
     _lock: Lock = Lock()
 

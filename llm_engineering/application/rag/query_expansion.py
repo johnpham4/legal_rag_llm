@@ -1,4 +1,3 @@
-import opik
 from langchain_cohere import ChatCohere
 from loguru import logger
 
@@ -9,7 +8,6 @@ from llm_engineering.application.rag.prompt_templates import QueryExpansionTempl
 
 
 class QueryExpansion(RAGStep):
-    @opik.track(name="QueryExpansion.generate")
     def generate(self, query: Query, expand_to_n: int) -> list[Query]:
         assert expand_to_n > 0, f"'expand_to_n' should be greater than 0. Got {expand_to_n}."
 

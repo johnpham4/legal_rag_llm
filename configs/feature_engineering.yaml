@@ -6,6 +6,6 @@ settings:
     synchronous: false
 
 parameters:
-  query_limit: 4
+  query_limit: null
   batch_size: 10
   sparse_model_path: models/sparse_bm25_model.pkl

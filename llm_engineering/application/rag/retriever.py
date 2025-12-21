@@ -1,7 +1,6 @@
 from loguru import logger
 import concurrent.futures
 from qdrant_client.models import FieldCondition, Filter, MatchValue
-import opik
 
 from llm_engineering.application.rag.query_expansion import QueryExpansion
 from llm_engineering.application.rag.reranking import Reranker
@@ -19,7 +18,6 @@ class ContextRetriever:
         self._reranker = Reranker(mock=mock)
         self._embedding_dispatcher = EmbeddingDispatcher()
 
-    # @opik.track(name="ContextRetriever.search")
     def search(
         self,
         query: str,
@@ -80,14 +78,31 @@ class ContextRetriever:
                 query_filter=query_filter
             )
 
+        # FALLBACK: If filter returns 0 chunks, retry without filter
+        if len(search_results) == 0 and query_filter is not None:
+            logger.warning(f"Metadata filter returned 0 chunks, retrying without filter")
+            if embedded_query.sparse_embedding:
+                search_results = EmbeddedChunk.hybrid_search(
+                    query_vector=embedded_query.embedding,
+                    sparse_query_vector=embedded_query.sparse_embedding,
+                    limit=k // 3,
+                    query_filter=None
+                )
+            else:
+                search_results = EmbeddedChunk.search(
+                    query_vector=embedded_query.embedding,
+                    limit=k // 3,
+                    query_filter=None
+                )
+
         logger.info(
             f"Found {len(search_results)} chunks for query",
         )
 
         return search_results
 
-    def _build_filter(self, metadata: dict) -> Filter | None:
-        """Build Qdrant filter from metadata. No mapping needed - data normalized at ETL."""
+    def _build_filter(self, metadata: dict | None) -> Filter | None:
+
         conditions = []
 
         if metadata.get("document_type"):

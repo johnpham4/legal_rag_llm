@@ -5,4 +5,3 @@ settings:
 
 parameters:
   query_limit: null
-  save_path: models/sparse_bm25_model.pkl

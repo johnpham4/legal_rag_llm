@@ -1,12 +1,23 @@
 from functools import cached_property
 from pathlib import Path
 from typing import Optional
+import os
+import logging
+
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 import numpy as np
 from loguru import logger
 from numpy.typing import NDArray
 from sentence_transformers.SentenceTransformer import SentenceTransformer
 from transformers import AutoTokenizer
+import transformers
+
+# Disable transformers logging
+transformers.logging.set_verbosity_error()
+
+# Disable sentence-transformers internal logger to suppress tqdm
+logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
 
 from llm_engineering.settings import settings
 
@@ -50,7 +61,7 @@ class EmbeddingModelSingleton(metaclass=SingletonMeta):
         self, input_text: str | list[str], to_list: bool=True
     ) -> NDArray[np.float32] | list[float] | list[list[float]]:
         try:
-            embeddings = self._model.encode(input_text)
+            embeddings = self._model.encode(input_text, show_progress_bar=False)
         except Exception:
             logger.error(f"Error generating embeddings for {self._model_id=} and {input_text=}")
 
