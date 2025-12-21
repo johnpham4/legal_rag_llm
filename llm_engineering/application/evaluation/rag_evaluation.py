@@ -41,16 +41,27 @@ class RetrievalEvaluator:
         }
         run = Run(run_dict)
 
-        # Evaluate with ranx
+        # Evaluate with ranx - optimized metrics for small dataset
+        # MRR: primary metric for datasets with few relevant docs per query
+        # Hit Rate@k: binary - có tìm thấy ÍT NHẤT 1 relevant doc không? (0 hoặc 1)
+        # Recall@k: coverage - tìm được bao nhiêu % trong tổng relevant docs
+        # NDCG: standard ranking quality metric
+        # MAP: reference metric
         metrics = evaluate(
             qrels=qrels,
             run=run,
             metrics=[
-                f"precision@{k}",
-                f"recall@{k}",
-                "mrr",
-                f"ndcg@{k}",
-                f"map@{k}"
+                "mrr",  # Mean Reciprocal Rank (PRIMARY)
+                f"hit_rate@1",  # Binary: có relevant doc ở rank 1?
+                f"hit_rate@3",  # Binary: có relevant doc trong top 3?
+                f"hit_rate@5",  # Binary: có relevant doc trong top 5?
+                f"hit_rate@{k}",  # Binary: có relevant doc trong top K?
+                f"recall@3",  # Coverage: % relevant docs tìm được trong top 3
+                f"recall@5",  # Coverage: % relevant docs tìm được trong top 5
+                f"recall@{k}",  # Coverage: % relevant docs tìm được trong top K
+                f"ndcg@5",  # NDCG at 5
+                f"ndcg@{k}",  # NDCG at K
+                "map"  # Mean Average Precision (reference)
             ]
         )
 
@@ -130,8 +141,8 @@ class RetrievalEvaluator:
             hybrid_val = hybrid_metrics[metric_name]
             improvements[f"{metric_name}_pct"] = calc_improvement(hybrid_val, dense_val)
 
-        # Winner based on NDCG (industry standard)
-        winner = "hybrid" if hybrid_metrics[f"ndcg@{k}"] > dense_metrics[f"ndcg@{k}"] else "dense"
+        # Winner based on MRR (best metric for datasets with few relevant docs)
+        winner = "hybrid" if hybrid_metrics["mrr"] > dense_metrics["mrr"] else "dense"
 
         return {
             "query": query,

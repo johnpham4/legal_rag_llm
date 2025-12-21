@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     COHERE_MODEL_ID: str = "command-r-08-2024"
     COHERE_API_KEY: str | None = None
 
-    SPARSE_ALGORITHM: str = "tfidf"
+    SPARSE_ALGORITHM: str = "bm25"
 
     @property
     def SPARSE_MODEL_PATH(self) -> str:

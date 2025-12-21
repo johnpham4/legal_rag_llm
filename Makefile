@@ -30,5 +30,5 @@ api:
 	uv run python llm_engineering/infrastructure/inference_pipeline_api.py
 
 eval:
-	uv run python 000-evaluate.py
+	uv run python 001-evaluate_search.py
 
